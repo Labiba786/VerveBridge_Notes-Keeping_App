@@ -1,0 +1,7 @@
+node_modules/
+
+# Ignore node_modules in backend
+backend/node_modules/
+
+# Ignore node_modules in frontend/notes-app
+frontend/notes-app/node_modules/
