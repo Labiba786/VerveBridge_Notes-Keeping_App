@@ -23,6 +23,7 @@ app.get("/", (req, res) => {
 });
 
 // Create Account
+// Create Account
 app.post("/create-account", async (req, res) => {
   const { fullName, email, password } = req.body;
 
@@ -60,9 +61,13 @@ app.post("/create-account", async (req, res) => {
 
     await user.save();
 
-    const accessToken = jwt.sign({ user }, process.env.ACCESS_TOKEN_SECRET, {
-      expiresIn: "10h",
-    });
+    const accessToken = jwt.sign(
+      { user: { _id: user._id, fullName: user.fullName, email: user.email } },
+      process.env.ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: "10h",
+      }
+    );
 
     return res.json({
       error: false,
@@ -98,10 +103,19 @@ app.post("/login", async (req, res) => {
     }
 
     if (userInfo.email === email && userInfo.password === password) {
-      const user = { user: userInfo };
-      const accessToken = jwt.sign({ user }, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: "10h",
-      });
+      const accessToken = jwt.sign(
+        {
+          user: {
+            _id: userInfo._id,
+            fullName: userInfo.fullName,
+            email: userInfo.email,
+          },
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+          expiresIn: "10h",
+        }
+      );
 
       return res.json({
         error: false,
@@ -124,7 +138,7 @@ app.post("/login", async (req, res) => {
 app.get("/get-user", authenticateToken, async (req, res) => {
   const user = req.user.user;
   try {
-    const isUser = await User.findOne({ _id: user.user._id });
+    const isUser = await User.findOne({ _id: user._id });
 
     if (!isUser) {
       return res.sendStatus(401);
@@ -166,7 +180,7 @@ app.post("/add-note", authenticateToken, async (req, res) => {
       title,
       content,
       tags: tags || [],
-      userId: user.user._id,
+      userId: user._id,
     });
 
     await note.save();
@@ -188,7 +202,7 @@ app.post("/add-note", authenticateToken, async (req, res) => {
 app.put("/edit-note/:noteId", authenticateToken, async (req, res) => {
   const noteId = req.params.noteId;
   const { title, content, tags, isPinned } = req.body;
-  const { user } = req.user.user;
+  const { user } = req.user;
   if (!title && !content && !tags && isPinned === undefined) {
     return res
       .status(400)
@@ -224,7 +238,7 @@ app.put("/edit-note/:noteId", authenticateToken, async (req, res) => {
 app.get("/get-all-notes/", authenticateToken, async (req, res) => {
   const { user } = req.user;
   try {
-    const notes = await Note.find({ userId: user.user._id }).sort({
+    const notes = await Note.find({ userId: user._id }).sort({
       isPinned: -1,
     });
 
@@ -270,7 +284,7 @@ app.delete("/delete-note/:noteId", authenticateToken, async (req, res) => {
 app.put("/update-note-pinned/:noteId", authenticateToken, async (req, res) => {
   const noteId = req.params.noteId;
   const { isPinned } = req.body;
-  const { user } = req.user.user;
+  const { user } = req.user;
 
   try {
     const note = await Note.findOne({ _id: noteId, userId: user._id });
@@ -296,7 +310,7 @@ app.put("/update-note-pinned/:noteId", authenticateToken, async (req, res) => {
 
 // Search Notes
 app.get("/search-notes", authenticateToken, async (req, res) => {
-  const { user } = req.user.user;
+  const { user } = req.user;
   const { queryText } = req.query;
 
   if (!queryText) {
