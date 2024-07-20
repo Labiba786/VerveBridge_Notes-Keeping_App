@@ -14,7 +14,7 @@ Welcome to the Notes Keeping Application project! This repository contains the s
 
 ## Tech Stack Used
 
-**Client:** React, Redux, TailwindCSS
+**Client:** React, TailwindCSS
 
 **Server:** Node, Express
 
